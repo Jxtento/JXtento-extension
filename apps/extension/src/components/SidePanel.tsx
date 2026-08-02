@@ -23,7 +23,8 @@ import { DeveloperReputationPanel } from "./DeveloperReputationPanel"
 import { LaunchPanel } from "./LaunchPanel"
 import { KolLiveFeed } from "./KolLiveFeed"
 import { NewsLiveFeed } from "./NewsLiveFeed"
-import { WalletButton } from "./WalletButton"
+import { OnChainWalletTracker } from "./OnChainWalletTracker"
+
 import { JXtentoProPanel } from "./JXtentoProPanel"
 import { ActivityLog } from "./ActivityLog"
 import { GuardedTab } from "./GuardedTab"
@@ -644,6 +645,8 @@ export function SidePanel() {
         </div>
         {selected.type === "token" ? (
           <DeveloperReputationPanel tokenAddress={selected.address} context={selected.context} />
+        ) : selected.type === "wallet" ? (
+          <OnChainWalletTracker intelligence={intelligence as any} />
         ) : null}
       </section>
     </>
@@ -713,6 +716,7 @@ function LaunchWorkspace({
         <PanelButton onClick={() => onCopy("metadata", formatLaunchMetadata(draft))}>
           Copy all
         </PanelButton>
+
         <PanelButton onClick={() => onOpenLogo(draft)}>Logo via GPT</PanelButton>
         <PanelButton onClick={() => window.open(buildPumpFunCreateUrl(draft), "_blank", "noopener,noreferrer")}>
           Deploy page
@@ -890,7 +894,7 @@ function PanelHeader() {
         </h1>
       </div>
       <div className="pt-1">
-        <WalletButton />
+
       </div>
     </header>
   )

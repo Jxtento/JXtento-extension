@@ -1,50 +1,12 @@
-import type { 
-  FrontendToBackgroundMessage, 
-  FrontendWalletStatusResponse, 
-  FrontendWalletConnectResponse,
-  FrontendWalletDisconnectResponse,
-  FrontendFastLaunchResponse, 
-  FastLaunchDraft 
-} from "./messaging";
-import { getWalletSession } from "./storage";
-
-export async function getWalletStatus(): Promise<FrontendWalletStatusResponse> {
-  const session = await getWalletSession();
-  if (session && session.connected) {
-    return { connected: true, publicKey: session.publicKey, provider: session.provider as any };
-  }
-
-  const msg: FrontendToBackgroundMessage = { type: "FRONTEND_WALLET_STATUS" };
-  try {
-    return await chrome.runtime.sendMessage(msg);
-  } catch (err) {
-    return { connected: false };
-  }
+export async function getWalletStatus(): Promise<{connected: boolean; publicKey?: string}> {
+  return { connected: false };
 }
-
-export async function connectWallet(provider: "phantom" | "solflare" | "backpack"): Promise<FrontendWalletConnectResponse> {
-  const msg: FrontendToBackgroundMessage = { type: "FRONTEND_WALLET_CONNECT", provider };
-  try {
-    return await chrome.runtime.sendMessage(msg);
-  } catch (err: any) {
-    return { success: false, error: err.message || "Failed to connect" };
-  }
+export async function connectWallet(provider: string): Promise<{success: boolean; publicKey?: string; error?: string}> {
+  return { success: false, error: "Wallet connections are disabled in extension." };
 }
-
-export async function disconnectWallet(provider: "phantom" | "solflare" | "backpack"): Promise<FrontendWalletDisconnectResponse> {
-  const msg: FrontendToBackgroundMessage = { type: "FRONTEND_WALLET_DISCONNECT", provider };
-  try {
-    return await chrome.runtime.sendMessage(msg);
-  } catch (err: any) {
-    return { success: false, error: err.message || "Failed to disconnect" };
-  }
+export async function disconnectWallet(provider: string): Promise<{success: boolean; error?: string}> {
+  return { success: true };
 }
-
-export async function fastLaunch(draft: FastLaunchDraft): Promise<FrontendFastLaunchResponse> {
-  const msg: FrontendToBackgroundMessage = { type: "FRONTEND_FAST_LAUNCH", draft };
-  try {
-    return await chrome.runtime.sendMessage(msg);
-  } catch (err: any) {
-    return { success: false, error: err.message };
-  }
+export async function fastLaunch(draft: any): Promise<{success: boolean; error?: string}> {
+  return { success: false, error: "Deploy is moved to web." };
 }

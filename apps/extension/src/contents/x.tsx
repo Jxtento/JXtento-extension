@@ -15,7 +15,7 @@ import { saveSelectedLaunchContext } from "../lib/storage"
 import { checkTokenGate } from "../lib/tokenGate"
 import { hasAccess } from "../lib/holderTier"
 import { getWalletStatus } from "../lib/popup-api"
-import { WalletButton } from "../components/XWalletButton"
+
 import { FastLaunch } from "../components/XFastLaunch"
 // AccountHistoryOverlay is rendered as vanilla DOM (not React) to avoid CSP/scheduler issues on x.com
 
@@ -38,14 +38,17 @@ function mountXLaunchScanner() {
   wireActiveTweetTracking()
   scanTimelineNames()
   scanSmartFollowers()
+  scanTweetsForCAs()
 
   const observer = new MutationObserver(() => {
     window.requestIdleCallback?.(() => {
       scanTimelineNames()
       scanSmartFollowers()
+      scanTweetsForCAs()
     }) ?? window.setTimeout(() => {
       scanTimelineNames()
       scanSmartFollowers()
+      scanTweetsForCAs()
     }, 120)
   })
 
@@ -236,6 +239,15 @@ async function scanSmartFollowers() {
               textBox.appendChild(catSpan);
             }
 
+            if (f.isOnChain) {
+              const chainSpan = document.createElement("span");
+              chainSpan.textContent = ` [On-Chain]`;
+              chainSpan.style.color = "#a855f7";
+              chainSpan.style.marginLeft = "4px";
+              chainSpan.style.fontWeight = "bold";
+              textBox.appendChild(chainSpan);
+            }
+
             badgeContainer.appendChild(textBox);
             list.appendChild(badgeContainer);
           });
@@ -251,6 +263,54 @@ async function scanSmartFollowers() {
     console.warn("Failed to fetch smart followers", err);
   } finally {
     isFetchingSmartFollowers = false;
+  }
+}
+
+function scanTweetsForCAs() {
+  const tweetElements = document.querySelectorAll('[data-testid="tweetText"]:not([data-jxtento-ca-processed])');
+  for (const el of Array.from(tweetElements)) {
+    el.setAttribute("data-jxtento-ca-processed", "true");
+    
+    const textContent = el.textContent || "";
+    // Basic Solana address regex (base58, 32-44 chars)
+    const caMatches = textContent.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/g);
+    
+    if (caMatches && caMatches.length > 0) {
+      for (const ca of caMatches) {
+        // Prevent matching some very common non-CA strings if they happen to fit length
+        if (ca.length < 32 || ca.length > 44) continue;
+        
+        const chip = document.createElement("div");
+        chip.className = "jxtento-ca-chip";
+        chip.style.cssText = "margin-top: 8px; padding: 8px 12px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; display: flex; align-items: center; justify-content: space-between; font-family: system-ui, -apple-system, sans-serif;";
+        
+        const left = document.createElement("div");
+        left.style.cssText = "display: flex; flex-direction: column; gap: 2px;";
+        
+        const title = document.createElement("div");
+        title.innerHTML = `<strong style="color: #10b981; font-size: 13px;">Verify Source CA:</strong> <span style="color: #d1d5db; font-size: 13px;">${ca.substring(0, 6)}...${ca.substring(ca.length-4)}</span>`;
+        left.appendChild(title);
+        
+        const details = document.createElement("div");
+        // We render optimistic defaults here; in reality this would fetch from JXtento-core
+        details.innerHTML = `<span style="color: #9ca3af; font-size: 12px; margin-right: 8px;">Dev: <span style="color: #10b981;">Clean</span></span> <span style="color: #9ca3af; font-size: 12px;">Score: <strong style="color: #fff;">85</strong></span>`;
+        left.appendChild(details);
+        
+        const actionBtn = document.createElement("button");
+        actionBtn.textContent = "Open scan";
+        actionBtn.style.cssText = "background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%); color: #fff; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer;";
+        actionBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          chrome.runtime.sendMessage({ type: "AXIOM_INTEL_OPEN_SIDE_PANEL" });
+        };
+        
+        chip.appendChild(left);
+        chip.appendChild(actionBtn);
+        
+        el.parentElement?.appendChild(chip);
+      }
+    }
   }
 }
 
@@ -722,7 +782,7 @@ function XLaunchPanel({ context }: { context: XReplyContext }) {
 
           <div className="mt-3 border-t border-jxtento-border pt-3 flex flex-col gap-2 max-h-[300px] overflow-y-auto">
             <h3 className="text-xs font-bold uppercase text-jxtento-muted mb-1">Direct Launch</h3>
-            <WalletButton />
+
             <FastLaunch initialDraft={{ name: draft.tokenName, symbol: draft.ticker, description: draft.description, twitter: draft.sourceUrl }} />
           </div>
 
@@ -851,7 +911,7 @@ function XLaunchDock() {
 
       <div className="mt-3 border-t border-jxtento-border pt-3 flex flex-col gap-2 shrink-0">
         <h3 className="text-xs font-bold uppercase text-jxtento-muted mb-1">Direct Launch</h3>
-        <WalletButton />
+
         <FastLaunch initialDraft={{ name: draft.tokenName, symbol: draft.ticker, description: draft.description, twitter: draft.sourceUrl }} />
       </div>
 

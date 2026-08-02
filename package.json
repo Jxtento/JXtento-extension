@@ -7,12 +7,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/JXtento/jxtento.git"
+    "url": "https://github.com/Jxtento/JXtento-extension.git"
   },
   "bugs": {
-    "url": "https://github.com/JXtento/jxtento/issues"
+    "url": "https://github.com/Jxtento/JXtento-extension/issues"
   },
-  "homepage": "https://github.com/JXtento/jxtento#readme",
+  "homepage": "https://github.com/Jxtento/JXtento-extension#readme",
   "workspaces": [
     "apps/extension",
     "apps/api"

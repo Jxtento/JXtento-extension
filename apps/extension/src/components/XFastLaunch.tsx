@@ -1,152 +1,45 @@
 import { useState, useEffect } from "react";
-import { fastLaunch } from "../lib/popup-api";
-import type { FastLaunchDraft } from "../lib/messaging";
-import { getLaunchSettings, saveLaunchSettings, getSelectedLaunchContext } from "../lib/storage";
-import type { LaunchSettings } from "../lib/storage";
+import { getSelectedLaunchContext } from "../lib/storage";
 
-export function FastLaunch({ initialDraft }: { initialDraft?: Partial<FastLaunchDraft> } = {}) {
-  const [draft, setDraft] = useState<FastLaunchDraft>({
-    name: initialDraft?.name || "",
-    symbol: initialDraft?.symbol || "",
-    description: initialDraft?.description || "",
-    image: initialDraft?.image || ""
-  });
-  
-  const [settings, setSettings] = useState<LaunchSettings>({
-    ipfsProvider: "pumpfun",
-    pinataJwt: "",
-    devBuySol: 0,
-    slippage: 5,
-    priorityFee: 0.0005
-  });
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [successLink, setSuccessLink] = useState("");
+export function FastLaunch({ initialDraft }: { initialDraft?: any } = {}) {
+  const [draftName, setDraftName] = useState(initialDraft?.name || "");
+  const [draftDesc, setDraftDesc] = useState(initialDraft?.description || "");
 
   useEffect(() => {
-    getLaunchSettings().then(setSettings);
     if (!initialDraft) {
       getSelectedLaunchContext().then(ctx => {
         if (ctx) {
-          setDraft(d => ({ ...d, name: ctx.authorName + " Token", description: ctx.text, twitter: ctx.url }));
+          setDraftName(ctx.authorName + " Token");
+          setDraftDesc(ctx.text);
         }
       });
     }
   }, [initialDraft]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setDraft(d => ({ ...d, image: ev.target?.result as string }));
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleLaunch = async () => {
-    setLoading(true);
-    setError("");
-    setSuccessLink("");
-    
-    // Save settings
-    await saveLaunchSettings(settings);
-
-    if (!draft.name || !draft.symbol || !draft.description || !draft.image) {
-      setError("Please fill all required fields and upload an image.");
-      setLoading(false);
-      return;
-    }
-
-    const res = await fastLaunch(draft);
-    if (res.success && res.mint) {
-      setSuccessLink(`https://pump.fun/${res.mint}`);
-      // If token was created but dev buy failed, show as warning
-      if (res.error) {
-        setError(`⚠️ ${res.error}`);
-      }
-    } else {
-      console.error("[FastLaunch Frontend] Launch failed:", res.error);
-      setError(res.error || "Failed to launch");
-    }
-    setLoading(false);
-  };
+  // Use a deep link instead of inline deployment
+  const baseUrl = process.env.PLASMO_PUBLIC_JXTENTO_WEB_URL || "http://localhost:3000";
+  const webTerminalUrl = `${baseUrl}/terminal?action=deploy&ref=ext&name=${encodeURIComponent(draftName)}&desc=${encodeURIComponent(draftDesc)}`;
 
   return (
-    <div className="flex flex-col gap-3 mt-4 text-jxtento-text">
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-jxtento-muted">Name</label>
-        <input className="px-2 py-1 bg-jxtento-bg border border-jxtento-border rounded text-sm text-jxtento-text focus:outline-none" value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} />
+    <div className="p-4 bg-gray-900 border border-gray-800 rounded-xl space-y-4 shadow-xl">
+      <div className="flex items-center space-x-2 text-white">
+        <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+        <h2 className="font-semibold text-lg">Deploy Token</h2>
       </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-jxtento-muted">Ticker</label>
-        <input className="px-2 py-1 bg-jxtento-bg border border-jxtento-border rounded text-sm text-jxtento-text focus:outline-none" value={draft.symbol} onChange={e => setDraft(d => ({ ...d, symbol: e.target.value }))} />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-jxtento-muted">Description</label>
-        <textarea className="px-2 py-1 bg-jxtento-bg border border-jxtento-border rounded text-sm text-jxtento-text focus:outline-none min-h-[60px]" value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-jxtento-muted">Image</label>
-        <input type="file" accept="image/*" onChange={handleImageChange} className="text-xs" />
-        {draft.image && <img src={draft.image} className="w-16 h-16 object-cover rounded mt-1" alt="Preview" />}
-      </div>
+      <p className="text-gray-400 text-sm">
+        JXtento extension securely hands off deployments to the web terminal.
+      </p>
       
-      <details className="mt-2 text-sm border-t border-jxtento-border pt-2">
-        <summary className="cursor-pointer text-jxtento-muted">Social Links (Optional)</summary>
-        <div className="flex flex-col gap-2 mt-2">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-jxtento-muted">Website</label>
-            <input className="px-2 py-1 bg-jxtento-bg border border-jxtento-border rounded text-sm text-jxtento-text focus:outline-none" placeholder="https://" value={draft.website || ""} onChange={e => setDraft(d => ({ ...d, website: e.target.value }))} />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-jxtento-muted">Twitter/X</label>
-            <input className="px-2 py-1 bg-jxtento-bg border border-jxtento-border rounded text-sm text-jxtento-text focus:outline-none" placeholder="https://x.com/..." value={draft.twitter || ""} onChange={e => setDraft(d => ({ ...d, twitter: e.target.value }))} />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-jxtento-muted">Telegram</label>
-            <input className="px-2 py-1 bg-jxtento-bg border border-jxtento-border rounded text-sm text-jxtento-text focus:outline-none" placeholder="https://t.me/..." value={draft.telegram || ""} onChange={e => setDraft(d => ({ ...d, telegram: e.target.value }))} />
-          </div>
-        </div>
-      </details>
-      
-      <details className="mt-2 text-sm border-t border-jxtento-border pt-2">
-        <summary className="cursor-pointer text-jxtento-muted">Advanced Settings</summary>
-        <div className="flex flex-col gap-2 mt-2">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-jxtento-muted">IPFS Provider</label>
-            <input disabled className="px-2 py-1 bg-jxtento-bg border border-jxtento-border rounded text-xs text-jxtento-text focus:outline-none opacity-50 cursor-not-allowed" value="Pump.fun (Default)" />
-          </div>
-          <div className="flex gap-2">
-            <div className="flex flex-col gap-1 flex-1">
-              <label className="text-xs text-jxtento-muted">Dev Buy (SOL)</label>
-              <input type="text" inputMode="decimal" className="px-2 py-1 bg-jxtento-bg border border-jxtento-border rounded text-xs text-jxtento-text focus:outline-none" value={settings.devBuySol} onChange={e => setSettings(s => ({ ...s, devBuySol: e.target.value.replace(/[^0-9.,]/g, '') }))} />
-            </div>
-            <div className="flex flex-col gap-1 flex-1">
-              <label className="text-xs text-jxtento-muted">Slippage (%)</label>
-              <input type="text" inputMode="decimal" className="px-2 py-1 bg-jxtento-bg border border-jxtento-border rounded text-xs text-jxtento-text focus:outline-none" value={settings.slippage} onChange={e => setSettings(s => ({ ...s, slippage: e.target.value.replace(/[^0-9.,]/g, '') }))} />
-            </div>
-          </div>
-        </div>
-      </details>
-
-      {error && <div className="text-xs text-jxtento-bad mt-2 p-2 rounded bg-jxtento-bad/10 border border-jxtento-bad/20">{error}</div>}
-      
-      {successLink ? (
-        <div className="mt-3 flex flex-col gap-2 p-3 rounded bg-jxtento-good/10 border border-jxtento-good/20">
-          <div className="text-sm font-medium text-jxtento-good">Launched successfully!</div>
-          <a href={successLink} target="_blank" rel="noreferrer" className="text-xs underline text-jxtento-text">View on pump.fun</a>
-        </div>
-      ) : (
-        <button
-          onClick={handleLaunch}
-          disabled={loading}
-          className="mt-3 w-full py-2 rounded bg-[#00E599] text-black font-medium hover:opacity-90 transition-opacity"
-        >
-          {loading ? "Launching..." : "Launch on pump.fun"}
-        </button>
-      )}
+      <a 
+        href={webTerminalUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full py-2 px-4 rounded-lg font-medium text-white shadow hover:opacity-90 transition-opacity text-center flex items-center justify-center space-x-2"
+        style={{ background: "linear-gradient(90deg, #6366f1 0%, #a855f7 100%)" }}
+      >
+        <span>Open in JXtento Web</span>
+        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+      </a>
     </div>
   );
 }
