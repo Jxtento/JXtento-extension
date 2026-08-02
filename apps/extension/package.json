@@ -24,7 +24,7 @@
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.20",
     "@types/chrome": "^0.0.268",
-    "@types/node": "^26.1.0",
+    "@types/node": "^26.1.2",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.19",

@@ -7,6 +7,9 @@
         "./src/*"
       ]
     },
+    "types": [
+      "node"
+    ],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true
