@@ -16,17 +16,17 @@
     "@plasmohq/storage": "^1.15.0",
     "@solana/web3.js": "^1.98.4",
     "bs58": "^6.0.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-markdown": "^8.0.7",
-    "remark-gfm": "^3.0.1"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.20",
     "@types/chrome": "^0.0.268",
     "@types/node": "^26.1.2",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.19",
     "plasmo": "^0.90.5",
     "postcss": "^8.4.38",
