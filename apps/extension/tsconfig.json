@@ -1,0 +1,24 @@
+{
+  "extends": "plasmo/templates/tsconfig.base",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~*": [
+        "./src/*"
+      ]
+    },
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true
+  },
+  "include": [
+    ".plasmo/index.d.ts",
+    "src",
+    "tailwind.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build"
+  ]
+}
