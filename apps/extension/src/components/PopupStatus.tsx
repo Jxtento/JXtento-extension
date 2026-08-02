@@ -123,7 +123,7 @@ export function PopupStatus() {
 
       <footer className="mt-4 border-t border-jxtento-border pt-3 text-xs font-semibold text-jxtento-muted flex flex-col gap-2">
         <div className="flex flex-col gap-1 bg-jxtento-border/30 p-2 rounded-sm">
-          <span className="text-[10px] uppercase text-jxtento-text">JXtento Token ($FDP)</span>
+          <span className="text-[10px] uppercase text-jxtento-text">JXtento Token ($JXTENTO)</span>
           <a 
             href={`https://pump.fun/coin/${process.env.PLASMO_PUBLIC_JXTENTO_CA}`}
             target="_blank" 

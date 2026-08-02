@@ -31,8 +31,8 @@ import { GuardedTab } from "./GuardedTab"
 import { CopilotChat } from "./CopilotChat"
 import { GuardToggleButton } from "./GuardToggleButton"
 import { getSettings, saveSettings, type OverlaySettings } from "../lib/storage"
-import { type Tier, hasAccess } from "../lib/holderTier"
-
+import { checkTokenGate, type GateStatus } from "../lib/tokenGate"
+import { GATE_TOKEN } from "../config/gate"
 export function SidePanel() {
   const [activeTab, setActiveTab] = useState<"radar" | "kol" | "news" | "jxtento" | "activity" | "guarded" | "copilot">("kol")
   const [selected, setSelected] = useState<SelectedAddress | null>(null)
@@ -51,7 +51,7 @@ export function SidePanel() {
     showFlowRadar: true
   })
 
-  const [gateStatus, setGateStatus] = useState<{ tier: Tier; balance: number; error?: string } | null>(null);
+  const [gateStatus, setGateStatus] = useState<GateStatus | null>(null);
   const [loadingGate, setLoadingGate] = useState(true);
 
   useEffect(() => {
@@ -61,11 +61,10 @@ export function SidePanel() {
       setLoadingGate(true);
       const session = await getWalletStatus();
       if (session?.connected && session.publicKey) {
-        const { checkTokenGate } = await import("../lib/tokenGate");
         const result = await checkTokenGate(session.publicKey);
         if (mounted) setGateStatus(result);
       } else {
-        if (mounted) setGateStatus({ tier: "none", balance: 0, error: "Please connect your wallet to use the extension." });
+        if (mounted) setGateStatus({ unlocked: false, balance: 0, threshold: 0, ticker: GATE_TOKEN.ticker, error: "Please connect your wallet to use the extension." });
       }
       if (mounted) setLoadingGate(false);
     };
@@ -186,7 +185,7 @@ export function SidePanel() {
     return (
       <main className="min-h-screen bg-jxtento-bg p-4 text-jxtento-text">
         <PanelHeader />
-        <div className="mt-8 text-center text-jxtento-muted text-sm">Checking $FDP balance...</div>
+        <div className="mt-8 text-center text-jxtento-muted text-sm">Checking token balance...</div>
         <SidePanelFooter />
       </main>
     );
@@ -245,7 +244,7 @@ export function SidePanel() {
 
         {activeTab === "guarded" ? (
           <div className="flex-1 -mx-4 -mt-4 bg-jxtento-bg relative overflow-hidden p-4">
-            {!hasAccess(gateStatus?.tier || "none", "exitGuard") ? (
+            {!gateStatus?.unlocked ? (
               <div className="p-6 text-center mt-8">
                 <svg viewBox="0 0 24 24" fill="none" className="w-12 h-12 mx-auto text-jxtento-muted mb-4">
                   <path d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -253,7 +252,7 @@ export function SidePanel() {
                 <h2 className="text-lg font-bold text-jxtento-text">Pro Feature Locked</h2>
                 <div className="mt-2 text-sm text-jxtento-muted flex flex-col gap-2">
                   {gateStatus?.error && <p className="text-jxtento-bad text-xs mb-1">{gateStatus.error}</p>}
-                  <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Required: 5M $FDP (Plus Tier)</p>
+                  <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Hold 0.5% of supply to unlock</p>
                 </div>
               </div>
             ) : (
@@ -262,7 +261,7 @@ export function SidePanel() {
           </div>
         ) : activeTab === "copilot" ? (
           <div className="flex-1 -mx-4 -mt-4 bg-jxtento-bg relative overflow-hidden p-4">
-            {!hasAccess(gateStatus?.tier || "none", "copilot") ? (
+            {!gateStatus?.unlocked ? (
               <div className="p-6 text-center mt-8">
                 <svg viewBox="0 0 24 24" fill="none" className="w-12 h-12 mx-auto text-jxtento-muted mb-4">
                   <path d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -270,7 +269,7 @@ export function SidePanel() {
                 <h2 className="text-lg font-bold text-jxtento-text">Pro Feature Locked</h2>
                 <div className="mt-2 text-sm text-jxtento-muted flex flex-col gap-2">
                   {gateStatus?.error && <p className="text-jxtento-bad text-xs mb-1">{gateStatus.error}</p>}
-                  <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Required: 5M $FDP (Plus Tier)</p>
+                  <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Hold 0.5% of supply to unlock</p>
                 </div>
               </div>
             ) : (
@@ -292,7 +291,7 @@ export function SidePanel() {
                 }}
               />
             </div>
-            {!hasAccess(gateStatus?.tier || "none", "jxtentoOverlay") ? (
+            {!gateStatus?.unlocked ? (
               <div className="p-6 text-center mt-8">
                 <svg viewBox="0 0 24 24" fill="none" className="w-12 h-12 mx-auto text-jxtento-muted mb-4">
                   <path d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -300,7 +299,7 @@ export function SidePanel() {
                 <h2 className="text-lg font-bold text-jxtento-text">Pro Feature Locked</h2>
                 <div className="mt-2 text-sm text-jxtento-muted flex flex-col gap-2">
                   {gateStatus?.error && <p className="text-jxtento-bad text-xs mb-1">{gateStatus.error}</p>}
-                  <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Required: 5M $FDP (Plus Tier)</p>
+                  <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Hold 0.5% of supply to unlock</p>
                 </div>
               </div>
             ) : !selected || selected.type !== "token" ? (
@@ -331,7 +330,7 @@ export function SidePanel() {
           </div>
         ) : activeTab === "kol" ? (
           <div className="flex-1 -mx-4 -mt-4 bg-jxtento-bg relative overflow-hidden">
-            {!hasAccess(gateStatus?.tier || "none", "kolAlerts") ? (
+            {!gateStatus?.unlocked ? (
               <div className="p-6 text-center mt-8">
                 <svg viewBox="0 0 24 24" fill="none" className="w-12 h-12 mx-auto text-jxtento-muted mb-4">
                   <path d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -339,7 +338,7 @@ export function SidePanel() {
                 <h2 className="text-lg font-bold text-jxtento-text">Pro Feature Locked</h2>
                 <div className="mt-2 text-sm text-jxtento-muted flex flex-col gap-2">
                   {gateStatus?.error && <p className="text-jxtento-bad text-xs mb-1">{gateStatus.error}</p>}
-                  <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Required: 1M $FDP (Base Tier)</p>
+                  <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Hold 0.5% of supply to unlock</p>
                 </div>
               </div>
             ) : (
@@ -348,7 +347,7 @@ export function SidePanel() {
           </div>
         ) : activeTab === "news" ? (
           <div className="flex-1 -mx-4 -mt-4 bg-jxtento-bg relative overflow-hidden">
-            {!hasAccess(gateStatus?.tier || "none", "kolAlerts") ? (
+            {!gateStatus?.unlocked ? (
               <div className="p-6 text-center mt-8">
                 <svg viewBox="0 0 24 24" fill="none" className="w-12 h-12 mx-auto text-jxtento-muted mb-4">
                   <path d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -356,7 +355,7 @@ export function SidePanel() {
                 <h2 className="text-lg font-bold text-jxtento-text">Pro Feature Locked</h2>
                 <div className="mt-2 text-sm text-jxtento-muted flex flex-col gap-2">
                   {gateStatus?.error && <p className="text-jxtento-bad text-xs mb-1">{gateStatus.error}</p>}
-                  <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Required: 1M $FDP (Base Tier)</p>
+                  <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Hold 0.5% of supply to unlock</p>
                 </div>
               </div>
             ) : (
@@ -450,7 +449,7 @@ export function SidePanel() {
 
       {activeTab === "guarded" ? (
         <div className="flex-1 -mx-4 -mt-4 bg-jxtento-bg relative overflow-hidden p-4">
-          {!hasAccess(gateStatus?.tier || "none", "exitGuard") ? (
+          {!gateStatus?.unlocked ? (
             <div className="p-6 text-center mt-8">
               <svg viewBox="0 0 24 24" fill="none" className="w-12 h-12 mx-auto text-jxtento-muted mb-4">
                 <path d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -458,7 +457,7 @@ export function SidePanel() {
               <h2 className="text-lg font-bold text-jxtento-text">Pro Feature Locked</h2>
               <div className="mt-2 text-sm text-jxtento-muted flex flex-col gap-2">
                 {gateStatus?.error && <p className="text-jxtento-bad text-xs mb-1">{gateStatus.error}</p>}
-                <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Required: 5M $FDP (Plus Tier)</p>
+                <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Hold 0.5% of supply to unlock</p>
               </div>
             </div>
           ) : (
@@ -467,7 +466,7 @@ export function SidePanel() {
         </div>
       ) : activeTab === "copilot" ? (
         <div className="flex-1 -mx-4 -mt-4 bg-jxtento-bg relative overflow-hidden p-4">
-          {!hasAccess(gateStatus?.tier || "none", "copilot") ? (
+          {!gateStatus?.unlocked ? (
             <div className="p-6 text-center mt-8">
               <svg viewBox="0 0 24 24" fill="none" className="w-12 h-12 mx-auto text-jxtento-muted mb-4">
                 <path d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -475,7 +474,7 @@ export function SidePanel() {
               <h2 className="text-lg font-bold text-jxtento-text">Pro Feature Locked</h2>
               <div className="mt-2 text-sm text-jxtento-muted flex flex-col gap-2">
                 {gateStatus?.error && <p className="text-jxtento-bad text-xs mb-1">{gateStatus.error}</p>}
-                <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Required: 5M $FDP (Plus Tier)</p>
+                <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Hold 0.5% of supply to unlock</p>
               </div>
             </div>
           ) : (
@@ -497,7 +496,7 @@ export function SidePanel() {
               }}
             />
           </div>
-          {!hasAccess(gateStatus?.tier || "none", "jxtentoOverlay") ? (
+          {!gateStatus?.unlocked ? (
             <div className="p-6 text-center mt-8">
               <svg viewBox="0 0 24 24" fill="none" className="w-12 h-12 mx-auto text-jxtento-muted mb-4">
                 <path d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -505,7 +504,7 @@ export function SidePanel() {
               <h2 className="text-lg font-bold text-jxtento-text">Pro Feature Locked</h2>
               <div className="mt-2 text-sm text-jxtento-muted flex flex-col gap-2">
                 {gateStatus?.error && <p className="text-jxtento-bad text-xs mb-1">{gateStatus.error}</p>}
-                <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Required: 5M $FDP (Plus Tier)</p>
+                <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Hold 0.5% of supply to unlock</p>
               </div>
             </div>
           ) : !selected || selected.type !== "token" ? (
@@ -536,7 +535,7 @@ export function SidePanel() {
         </div>
       ) : activeTab === "kol" ? (
         <div className="flex-1 -mx-4 -mt-4 bg-jxtento-bg relative overflow-hidden">
-          {!hasAccess(gateStatus?.tier || "none", "kolAlerts") ? (
+          {!gateStatus?.unlocked ? (
             <div className="p-6 text-center mt-8">
               <svg viewBox="0 0 24 24" fill="none" className="w-12 h-12 mx-auto text-jxtento-muted mb-4">
                 <path d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -544,7 +543,7 @@ export function SidePanel() {
               <h2 className="text-lg font-bold text-jxtento-text">Pro Feature Locked</h2>
               <div className="mt-2 text-sm text-jxtento-muted flex flex-col gap-2">
                 {gateStatus?.error && <p className="text-jxtento-bad text-xs mb-1">{gateStatus.error}</p>}
-                <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Required: 1M $FDP (Base Tier)</p>
+                <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Hold 0.5% of supply to unlock</p>
               </div>
             </div>
           ) : (
@@ -903,16 +902,8 @@ function PanelHeader() {
 function SidePanelFooter() {
   return (
     <footer className="mt-6 border-t border-jxtento-border pt-3 text-xs font-semibold text-jxtento-muted flex flex-col gap-2">
-      <div className="flex flex-col gap-1 bg-jxtento-border/30 p-2 rounded-sm mb-2">
-        <span className="text-[10px] font-bold uppercase text-jxtento-text">Pro Tiers</span>
-        <div className="text-[10px] flex flex-col gap-1 text-jxtento-muted">
-          <span>• 1M $FDP (Base): KOL Alerts, Smart Followers</span>
-          <span>• 5M $FDP (Plus): Deployer Intel, Rug Scan, Flow Radar</span>
-          <span>• 10M $FDP (Founding): First Access</span>
-        </div>
-      </div>
       <div className="flex flex-col gap-1 bg-jxtento-border/30 p-2 rounded-sm">
-        <span className="text-[10px] uppercase text-jxtento-text">JXtento Token ($FDP)</span>
+        <span className="text-[10px] uppercase text-jxtento-text">JXtento Token ({GATE_TOKEN.ticker})</span>
         <a 
           href={`https://pump.fun/coin/${process.env.PLASMO_PUBLIC_JXTENTO_CA}`}
           target="_blank" 

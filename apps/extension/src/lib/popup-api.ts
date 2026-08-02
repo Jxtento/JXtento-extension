@@ -7,6 +7,3 @@ export async function connectWallet(provider: string): Promise<{success: boolean
 export async function disconnectWallet(provider: string): Promise<{success: boolean; error?: string}> {
   return { success: true };
 }
-export async function fastLaunch(draft: any): Promise<{success: boolean; error?: string}> {
-  return { success: false, error: "Deploy is moved to web." };
-}

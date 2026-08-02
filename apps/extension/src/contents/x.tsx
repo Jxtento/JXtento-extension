@@ -13,10 +13,8 @@ import {
 } from "../lib/xLaunchContext"
 import { saveSelectedLaunchContext } from "../lib/storage"
 import { checkTokenGate } from "../lib/tokenGate"
-import { hasAccess } from "../lib/holderTier"
 import { getWalletStatus } from "../lib/popup-api"
 
-import { FastLaunch } from "../components/XFastLaunch"
 // AccountHistoryOverlay is rendered as vanilla DOM (not React) to avoid CSP/scheduler issues on x.com
 
 export const config: PlasmoCSConfig = {
@@ -709,7 +707,7 @@ function startWhenReady() {
       // KOL Live features (like the in-feed tracked badge) are PRO features.
       const session = await getWalletStatus()
       const gate = await checkTokenGate(session?.publicKey)
-      if (hasAccess(gate.tier, "kolAlerts")) {
+      if (gate.unlocked) {
         await fetchWatchlist()
       } else {
         console.info("[JXtento] Token gate not passed for KOL alerts. KOL tracking badges disabled on X.")
@@ -780,11 +778,7 @@ function XLaunchPanel({ context }: { context: XReplyContext }) {
 
           {copied ? <p className="text-xs font-semibold text-jxtento-good">Copied {copied}</p> : null}
 
-          <div className="mt-3 border-t border-jxtento-border pt-3 flex flex-col gap-2 max-h-[300px] overflow-y-auto">
-            <h3 className="text-xs font-bold uppercase text-jxtento-muted mb-1">Direct Launch</h3>
-
-            <FastLaunch initialDraft={{ name: draft.tokenName, symbol: draft.ticker, description: draft.description, twitter: draft.sourceUrl }} />
-          </div>
+          
 
           <ul className="space-y-1 border-t border-jxtento-border pt-2">
             {draft.warnings.map((warning) => (
@@ -909,11 +903,7 @@ function XLaunchDock() {
 
       {copied ? <p className="mt-2 text-xs font-semibold text-jxtento-good">Copied {copied}</p> : null}
 
-      <div className="mt-3 border-t border-jxtento-border pt-3 flex flex-col gap-2 shrink-0">
-        <h3 className="text-xs font-bold uppercase text-jxtento-muted mb-1">Direct Launch</h3>
-
-        <FastLaunch initialDraft={{ name: draft.tokenName, symbol: draft.ticker, description: draft.description, twitter: draft.sourceUrl }} />
-      </div>
+      
 
       <p className="mt-2 border-t border-jxtento-border pt-2 text-[11px] leading-4 text-jxtento-muted shrink-0">
         Manual launch only. JXtento never connects wallet, requests SOL, or sends transactions.

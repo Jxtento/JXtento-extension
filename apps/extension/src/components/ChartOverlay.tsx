@@ -3,7 +3,7 @@ import { getApiSettings, getSettings, saveSettings } from "../lib/storage"
 
 interface ChartOverlayProps {
   tokenAddress: string
-  tier: "none" | "base" | "plus" | "founding"
+  unlocked: boolean
 }
 
 interface FlowEvent {
@@ -14,7 +14,7 @@ interface FlowEvent {
   txSignature: string
 }
 
-export function ChartOverlay({ tokenAddress, tier }: ChartOverlayProps) {
+export function ChartOverlay({ tokenAddress, unlocked }: ChartOverlayProps) {
   const [events, setEvents] = useState<FlowEvent[]>([])
   const [metrics, setMetrics] = useState({ organicVol: 0, loopingVol: 0, suspectVol: 0, roundTrips: 0 })
   const [isLive, setIsLive] = useState(false)
@@ -104,7 +104,7 @@ export function ChartOverlay({ tokenAddress, tier }: ChartOverlayProps) {
   
   // Connect to WebSocket when tokenAddress changes and user has access
   useEffect(() => {
-    if (tier === "none" || tier === "base") return;
+    if (!unlocked) return;
     if (!isManualConnect) return; // Wait for manual trigger
     
     let isActive = true;
@@ -178,7 +178,7 @@ export function ChartOverlay({ tokenAddress, tier }: ChartOverlayProps) {
       setEvents([]);
       setMetrics({ organicVol: 0, loopingVol: 0, suspectVol: 0, roundTrips: 0 });
     }
-  }, [tokenAddress, tier, isManualConnect]);
+  }, [tokenAddress, unlocked, isManualConnect]);
 
   const totalVol = metrics.organicVol + metrics.loopingVol + metrics.suspectVol;
   const organicPct = totalVol > 0 ? Math.round((metrics.organicVol / totalVol) * 100) : 100;
@@ -200,12 +200,12 @@ export function ChartOverlay({ tokenAddress, tier }: ChartOverlayProps) {
 
   if (!isOpen) return null;
 
-  if (tier === "none" || tier === "base") {
+  if (!unlocked) {
     return (
       <div className="fixed bottom-4 left-4 z-[9999] rounded-xl bg-[#18181A] text-white border border-[#27272A] shadow-2xl p-4 flex items-center justify-between w-[400px]">
          <div className="text-sm font-bold">JXtento Flow Radar</div>
          <a href="https://pump.fun" target="_blank" rel="noreferrer" className="text-xs font-semibold text-[#00E599] hover:underline bg-[#00E599]/10 px-2 py-1 rounded">
-            Hold 0.5% $FDP to unlock
+            Hold 0.5% to unlock
          </a>
       </div>
     );
@@ -240,7 +240,7 @@ export function ChartOverlay({ tokenAddress, tier }: ChartOverlayProps) {
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4 text-[#EF4444]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
               <span className="font-extrabold text-sm tracking-wide">JXtento</span>
-              <span className="text-[10px] font-bold text-[#52525B] uppercase tracking-widest">$FDP Intelligence</span>
+              <span className="text-[10px] font-bold text-[#52525B] uppercase tracking-widest">JXtento Intelligence</span>
             </div>
             
             <div className="flex items-center gap-3 ml-2 text-[11px] font-medium text-[#A1A1AA]">

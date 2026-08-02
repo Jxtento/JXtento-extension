@@ -22,7 +22,7 @@ export const config: PlasmoCSConfig = {
 // Monitors the URL for token addresses and syncs them to the extension's side panel
 export default function JXtentoCSUI() {
   const [activeToken, setActiveToken] = useState<string | null>(null)
-  const [tier, setTier] = useState<"none" | "base" | "plus" | "founding">("none")
+  const [unlocked, setUnlocked] = useState(false)
   const [showFlowRadar, setShowFlowRadar] = useState(true)
 
   useEffect(() => {
@@ -109,7 +109,7 @@ export default function JXtentoCSUI() {
           // Fetch tier when a new token is found
           getWalletStatus().then(session => {
             checkTokenGate(session?.publicKey).then(gate => {
-              setTier(gate.tier)
+              setUnlocked(gate.unlocked)
             }).catch(console.warn)
           }).catch(console.warn)
         }
@@ -180,7 +180,7 @@ export default function JXtentoCSUI() {
   return (
     <>
       <div style={{ display: 'none' }} data-jxtento-csui="active" data-active-token={activeToken || ""} />
-      {showFlowRadar && activeToken && <ChartOverlay tokenAddress={activeToken} tier={tier} />}
+      {showFlowRadar && activeToken && <ChartOverlay tokenAddress={activeToken} unlocked={unlocked} />}
       {activeToken && <GuardedBadge tokenAddress={activeToken} />}
     </>
   )
