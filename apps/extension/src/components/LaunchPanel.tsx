@@ -12,12 +12,9 @@ export function LaunchPanel() {
     const verifyGate = async () => {
       setLoading(true);
       const session = await getWalletStatus();
-      if (session?.connected && session.publicKey) {
-        const result = await checkTokenGate(session.publicKey);
-        if (mounted) setGateStatus(result);
-      } else {
-        if (mounted) setGateStatus({ unlocked: false, balance: 0, threshold: 0, ticker: "$JXTENTO", error: "Please connect your wallet to use the extension." });
-      }
+      const pubKey = (session?.connected && session.publicKey) ? session.publicKey : undefined;
+      const result = await checkTokenGate(pubKey);
+      if (mounted) setGateStatus(result);
       if (mounted) setLoading(false);
     };
 
@@ -41,7 +38,7 @@ export function LaunchPanel() {
       ) : gateStatus?.unlocked ? (
         <div className="mt-4 flex flex-col gap-4">
           <p className="text-sm text-jxtento-text">Deploy tokens and manage positions from the Web Terminal.</p>
-          <a href={`${process.env.PLASMO_PUBLIC_JXTENTO_WEB_URL}/terminal`} target="_blank" rel="noopener noreferrer" className="bg-jxtento-accent text-white font-bold py-2 px-4 rounded hover:bg-jxtento-accent/90 transition-colors">
+          <a href={`${process.env.PLASMO_PUBLIC_JXTENTO_WEB_URL}/terminal`} target="_blank" rel="noopener noreferrer" className="bg-jxtento-accent text-black font-bold py-2 px-4 rounded hover:bg-jxtento-accent/90 transition-colors">
             Launch JXtento Terminal
           </a>
         </div>

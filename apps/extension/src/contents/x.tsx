@@ -850,7 +850,7 @@ function XLaunchPanel({ context }: { context: XReplyContext }) {
           <h2 className="mt-1 text-sm font-bold flex items-center gap-2">
             @{context.handle} {context.influence === "major" ? "major account" : "reply signal"}
             {window.__AXIOM_WATCHLIST_HANDLES__?.has(context.handle.toLowerCase()) && (
-              <span className="px-1.5 py-0.5 text-[10px] bg-jxtento-accent text-white rounded uppercase">Tracked</span>
+              <span className="px-1.5 py-0.5 text-[10px] bg-jxtento-accent text-black rounded uppercase">Tracked</span>
             )}
           </h2>
         </div>
@@ -949,7 +949,7 @@ function XLaunchDock() {
     return (
       <button
         type="button"
-        className="fixed bottom-4 right-4 z-[2147483647] rounded-sm bg-jxtento-accent px-3 py-2 text-sm font-bold text-white shadow-none"
+        className="fixed bottom-4 right-4 z-[2147483647] rounded-sm bg-jxtento-accent px-3 py-2 text-sm font-bold text-black shadow-none"
         onClick={() => setMinimized(false)}>
         Launch radar
       </button>
@@ -964,7 +964,7 @@ function XLaunchDock() {
           <h2 className="mt-1 text-base font-bold leading-tight flex items-center gap-2">
             {draft.tokenName} <span className="text-jxtento-accent">${draft.ticker}</span>
             {window.__AXIOM_WATCHLIST_HANDLES__?.has(context.handle.toLowerCase()) && (
-              <span className="px-1.5 py-0.5 text-[10px] bg-jxtento-accent text-white rounded uppercase shrink-0">Tracked</span>
+              <span className="px-1.5 py-0.5 text-[10px] bg-jxtento-accent text-black rounded uppercase shrink-0">Tracked</span>
             )}
           </h2>
           <p className="mt-1 text-xs text-jxtento-muted">
@@ -1049,7 +1049,7 @@ function ActionButton({
   return (
     <button
       type="button"
-      className="rounded-sm bg-jxtento-accent px-3 py-2 text-xs font-bold text-white transition hover:bg-jxtento-muted"
+      className="rounded-sm bg-jxtento-accent px-3 py-2 text-xs font-bold text-black transition hover:bg-jxtento-muted"
       onClick={onClick}>
       {children}
     </button>
@@ -1117,9 +1117,9 @@ const LAUNCH_RADAR_CSS = `
 [data-jxtento-launch-dock] .bg-jxtento-bg,
 .axiom-x-launch-mount .bg-jxtento-bg { background: #0a0a0b; }
 [data-jxtento-launch-dock] .bg-jxtento-accent,
-.axiom-x-launch-mount .bg-jxtento-accent { background: #3b82f6; }
+.axiom-x-launch-mount .bg-jxtento-accent { background: #FFFFFF; }
 [data-jxtento-launch-dock] .text-white,
-.axiom-x-launch-mount .text-white { color: #ffffff; }
+.axiom-x-launch-mount .text-black { color: #ffffff; }
 [data-jxtento-launch-dock] .text-jxtento-text,
 .axiom-x-launch-mount .text-jxtento-text { color: #fafafa; }
 [data-jxtento-launch-dock] .text-jxtento-muted,

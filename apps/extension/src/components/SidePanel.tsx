@@ -602,7 +602,7 @@ export function SidePanel() {
           />
           <button
             type="button"
-            className="mt-3 rounded-sm bg-jxtento-accent px-3 py-2 text-sm font-bold text-white transition hover:bg-jxtento-muted"
+            className="mt-3 rounded-sm bg-jxtento-accent px-3 py-2 text-sm font-bold text-black transition hover:bg-jxtento-muted"
             onClick={() => void handleSaveLabel()}>
             Save label
           </button>
@@ -738,7 +738,7 @@ function PanelButton({
   return (
     <button
       type="button"
-      className="rounded-sm bg-jxtento-accent px-3 py-2 text-xs font-bold text-white transition hover:bg-jxtento-muted"
+      className="rounded-sm bg-jxtento-accent px-3 py-2 text-xs font-bold text-black transition hover:bg-jxtento-muted"
       onClick={onClick}>
       {children}
     </button>
@@ -818,7 +818,7 @@ function ManualInspector({
       />
       <button
         type="button"
-        className="mt-3 rounded-sm bg-jxtento-accent px-3 py-2 text-sm font-bold text-white transition hover:bg-jxtento-muted"
+        className="mt-3 rounded-sm bg-jxtento-accent px-3 py-2 text-sm font-bold text-black transition hover:bg-jxtento-muted"
         onClick={onInspect}>
         Inspect
       </button>

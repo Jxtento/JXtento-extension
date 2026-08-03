@@ -5,13 +5,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        axiom: {
-          bg: "#0A0A0B",
-          panel: "#121214",
-          border: "#27272A",
-          text: "#FAFAFA",
-          muted: "#A1A1AA",
-          accent: "#3B82F6",
+        jxtento: {
+          bg: "#000000",
+          panel: "#111111",
+          border: "#333333",
+          text: "#FFFFFF",
+          muted: "#888888",
+          accent: "#FFFFFF",
+          accentForeground: "#000000",
           good: "#22C55E",
           warn: "#EAB308",
           bad: "#EF4444"

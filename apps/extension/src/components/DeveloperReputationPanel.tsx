@@ -282,7 +282,7 @@ export function DeveloperReputationPanel({
       <div className="mt-3 flex items-center gap-2">
         <button
           type="button"
-          className="rounded-sm bg-jxtento-accent px-3 py-2 text-sm font-bold text-white transition hover:bg-jxtento-muted disabled:cursor-not-allowed disabled:bg-jxtento-muted"
+          className="rounded-sm bg-jxtento-accent px-3 py-2 text-sm font-bold text-black transition hover:bg-jxtento-muted disabled:cursor-not-allowed disabled:bg-jxtento-muted"
           disabled={loading}
           onClick={() => void runAudit()}>
           {loading ? "Auditing" : "Audit proof"}

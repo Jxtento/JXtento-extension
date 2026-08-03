@@ -1,5 +1,31 @@
 import { useState, useEffect } from "react";
 
+let sharedAudioCtx: AudioContext | null = null;
+const playNotificationSound = () => {
+  try {
+    if (!sharedAudioCtx) {
+      sharedAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume();
+    }
+    const oscillator = sharedAudioCtx.createOscillator();
+    const gainNode = sharedAudioCtx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(sharedAudioCtx.destination);
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, sharedAudioCtx.currentTime); 
+    oscillator.frequency.exponentialRampToValueAtTime(1760, sharedAudioCtx.currentTime + 0.1);
+    gainNode.gain.setValueAtTime(0.1, sharedAudioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, sharedAudioCtx.currentTime + 0.5);
+    oscillator.start(sharedAudioCtx.currentTime);
+    oscillator.stop(sharedAudioCtx.currentTime + 0.5);
+  } catch(e) {
+    console.error("Audio play failed", e);
+  }
+};
+
+
 export function KolLiveFeed() {
   const [events, setEvents] = useState<any[]>([]);
 
@@ -34,6 +60,7 @@ export function KolLiveFeed() {
               if (prev.some(e => e.tweetId === evtData.tweetId)) return prev;
               const newEvents = [evtData, ...prev];
               if (newEvents.length > 100) newEvents.length = 100;
+              playNotificationSound();
               return newEvents;
             });
           }
@@ -121,6 +148,11 @@ export function KolLiveFeed() {
               <p className="text-xs text-jxtento-text whitespace-pre-wrap mb-2">
                 {evt.text}
               </p>
+              {evt.mediaUrl && (
+                <div className="mb-2 rounded-lg overflow-hidden border border-jxtento-border/20">
+                  <img src={evt.mediaUrl} alt="Tweet Media" className="w-full h-auto object-cover max-h-[300px]" loading="lazy" />
+                </div>
+              )}
               
               <div className="flex items-center gap-2 mt-2 pt-2 border-t border-jxtento-border/10">
                 {evt.ticker && (
