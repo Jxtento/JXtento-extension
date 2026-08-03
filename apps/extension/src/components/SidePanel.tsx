@@ -913,7 +913,7 @@ function SidePanelFooter() {
       <div className="flex items-center justify-between">
         <span>Version 1.0.0</span>
         <a 
-          href="https://x.com/jxtento" 
+          href="https://x.com/Jxtento6" 
           target="_blank" 
           rel="noreferrer"
           className="text-jxtento-text hover:text-jxtento-muted transition-colors flex items-center gap-1"
