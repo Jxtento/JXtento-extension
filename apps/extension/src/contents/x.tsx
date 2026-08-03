@@ -352,6 +352,7 @@ async function fetchHistoryData(handle: string) {
 }
 
 async function injectJXtentoIntelDOM(header: Element, handle: string) {
+  const apiUrl = process.env.PLASMO_PUBLIC_JXTENTO_API_URL || "http://localhost:8080";
   const container = document.createElement("div");
   container.className = "jxtento-intel-overlay";
   container.style.cssText = `
@@ -366,94 +367,118 @@ async function injectJXtentoIntelDOM(header: Element, handle: string) {
     flex-direction: column;
     gap: 12px;
   `;
-
-  // Row 1: Badges & Powered By
-  const row1 = document.createElement("div");
-  row1.style.cssText = "display: flex; justify-content: space-between; align-items: center;";
-  
-  const row1Left = document.createElement("div");
-  row1Left.style.cssText = "display: flex; gap: 8px; align-items: center;";
-  
-  const roleBadge = document.createElement("span");
-  roleBadge.textContent = "Founder@DeGods";
-  roleBadge.style.cssText = "background: #ffffff; color: #000000; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;";
-  
-  const addLabelBtn = document.createElement("button");
-  addLabelBtn.innerHTML = "Add Label ✎";
-  addLabelBtn.style.cssText = "background: transparent; color: #ffffff; border: 1px solid #ffffff; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; transition: background 0.2s;";
-  addLabelBtn.onmouseover = () => addLabelBtn.style.background = "rgba(255,255,255,0.1)";
-  addLabelBtn.onmouseout = () => addLabelBtn.style.background = "transparent";
-  
-  row1Left.appendChild(roleBadge);
-  row1Left.appendChild(addLabelBtn);
-  
-  const row1Right = document.createElement("div");
-  row1Right.style.cssText = "display: flex; gap: 6px; align-items: center; font-size: 12px; color: #9ca3af; font-weight: bold;";
-  row1Right.innerHTML = `Powered by <span style="color:#fff;">@JXtento</span> <img src="${logoUrl}" style="width:14px;height:14px;" onerror="this.style.display='none'"/>`;
-  
-  row1.appendChild(row1Left);
-  row1.appendChild(row1Right);
-  container.appendChild(row1);
-
-  // Row 2: Wallets and History
-  const row2 = document.createElement("div");
-  row2.style.cssText = "display: flex; gap: 24px; align-items: center; font-size: 13px; color: #9ca3af;";
-  
-  const walletsDiv = document.createElement("div");
-  walletsDiv.style.cssText = "display: flex; align-items: center; gap: 8px;";
-  walletsDiv.innerHTML = `
-    <span>Wallets</span>
-    <div style="display:flex; align-items:center; background: #1f2022; border-radius: 12px; padding: 2px 10px; font-size: 12px;">
-      <span>Linked <span style="color:#22c55e">4</span></span>
-      <span style="margin: 0 6px; color: #4b5563;">|</span>
-      <span>Mentioned 1 &gt;</span>
-    </div>
-  `;
-  
-  const historyDiv = document.createElement("div");
-  historyDiv.style.cssText = "display: flex; align-items: center; gap: 8px;";
-  historyDiv.innerHTML = `
-    <span>History</span>
-    <div style="display:flex; align-items:center; background: #1f2022; border-radius: 12px; padding: 2px 10px; font-size: 12px;">
-      <span>CA <span style="color:#22c55e">2</span> <span style="color:#4b5563">|</span> <span style="color:#ef4444">1</span> &gt;</span>
-    </div>
-    <div style="display:flex; align-items:center; background: #1f2022; border-radius: 12px; padding: 2px 10px; font-size: 12px;">
-      <span>Profile 0</span>
-    </div>
-  `;
-  
-  row2.appendChild(walletsDiv);
-  row2.appendChild(historyDiv);
-  container.appendChild(row2);
-
-  // Row 3: Top Moves
-  const row3 = document.createElement("div");
-  row3.style.cssText = "display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; color: #9ca3af;";
-  
-  const topMovesLabel = document.createElement("div");
-  topMovesLabel.innerHTML = `Top Moves <span style="border:1px solid #9ca3af; border-radius:50%; width:14px; height:14px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">i</span>`;
-  row3.appendChild(topMovesLabel);
-  
-  const moves = [
-    { label: "ORE", val: "$403K", color: "#22c55e" },
-    { label: "MOLT", val: "$285K", color: "#22c55e" },
-    { label: "MarsCoin", val: "$244K", color: "#22c55e" },
-    { label: "CLANKER", val: "$161K", color: "#22c55e" },
-    { label: "GME", val: "$44K", color: "#22c55e" },
-    { label: "GME", val: "Top 20", color: "#eab308" },
-    { label: "MarsCoin", val: "Top 100", color: "#eab308" },
-    { label: "ORE", val: "Top 100", color: "#eab308" }
-  ];
-  
-  moves.forEach(m => {
-    const chip = document.createElement("div");
-    chip.style.cssText = "background: #1f2022; border-radius: 4px; padding: 2px 6px; font-size: 12px; font-weight: bold; color: #fff; display: flex; gap: 4px; align-items: center; cursor: pointer;";
-    chip.innerHTML = `${m.label} <span style="color:${m.color}">${m.val}</span> <span style="color:#6b7280">↗</span>`;
-    row3.appendChild(chip);
-  });
-  
-  container.appendChild(row3);
+  container.innerHTML = `<div style="color: #9ca3af; font-size: 13px;">⏳ Loading intelligence for @${handle}...</div>`;
   header.parentElement?.appendChild(container);
+
+  try {
+    const res = await fetch(`${apiUrl}/intelligence/twitter/${handle}`);
+    if (!res.ok) throw new Error("API Error");
+    const data = await res.json();
+    
+    container.innerHTML = "";
+
+    // Row 1: Badges & Powered By
+    const row1 = document.createElement("div");
+    row1.style.cssText = "display: flex; justify-content: space-between; align-items: center;";
+    
+    const row1Left = document.createElement("div");
+    row1Left.style.cssText = "display: flex; gap: 8px; align-items: center;";
+    
+    const roleBadge = document.createElement("span");
+    roleBadge.textContent = data.label || "Unlabeled";
+    roleBadge.style.cssText = "background: #ffffff; color: #000000; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;";
+    
+    const addLabelBtn = document.createElement("button");
+    addLabelBtn.innerHTML = "Add Label ✎";
+    addLabelBtn.style.cssText = "background: transparent; color: #ffffff; border: 1px solid #ffffff; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; transition: background 0.2s;";
+    addLabelBtn.onmouseover = () => addLabelBtn.style.background = "rgba(255,255,255,0.1)";
+    addLabelBtn.onmouseout = () => addLabelBtn.style.background = "transparent";
+    addLabelBtn.onclick = async () => {
+      const newLabel = window.prompt(`Enter new label for @${handle}:`, data.label || "");
+      if (newLabel !== null && newLabel.trim() !== "") {
+        roleBadge.textContent = "Saving...";
+        try {
+          const updateRes = await fetch(`${apiUrl}/intelligence/twitter/${handle}/label`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ label: newLabel.trim() })
+          });
+          if (updateRes.ok) {
+            roleBadge.textContent = newLabel.trim();
+          } else {
+            roleBadge.textContent = "Error saving";
+            setTimeout(() => roleBadge.textContent = data.label, 2000);
+          }
+        } catch(e) {
+          roleBadge.textContent = "Error saving";
+          setTimeout(() => roleBadge.textContent = data.label, 2000);
+        }
+      }
+    };
+    
+    row1Left.appendChild(roleBadge);
+    row1Left.appendChild(addLabelBtn);
+    
+    const row1Right = document.createElement("div");
+    row1Right.style.cssText = "display: flex; gap: 6px; align-items: center; font-size: 12px; color: #9ca3af; font-weight: bold;";
+    row1Right.innerHTML = `Powered by <span style="color:#fff;">@JXtento</span> <img src="${logoUrl}" style="width:14px;height:14px;" onerror="this.style.display='none'"/>`;
+    
+    row1.appendChild(row1Left);
+    row1.appendChild(row1Right);
+    container.appendChild(row1);
+
+    // Row 2: Wallets and History
+    const row2 = document.createElement("div");
+    row2.style.cssText = "display: flex; gap: 24px; align-items: center; font-size: 13px; color: #9ca3af;";
+    
+    const walletsDiv = document.createElement("div");
+    walletsDiv.style.cssText = "display: flex; align-items: center; gap: 8px;";
+    walletsDiv.innerHTML = `
+      <span>Wallets</span>
+      <div style="display:flex; align-items:center; background: #1f2022; border-radius: 12px; padding: 2px 10px; font-size: 12px;">
+        <span>Linked <span style="color:#22c55e">0</span></span>
+        <span style="margin: 0 6px; color: #4b5563;">|</span>
+        <span>Mentioned 0 &gt;</span>
+      </div>
+    `;
+    
+    const historyDiv = document.createElement("div");
+    historyDiv.style.cssText = "display: flex; align-items: center; gap: 8px;";
+    historyDiv.innerHTML = `
+      <span>History</span>
+      <div style="display:flex; align-items:center; background: #1f2022; border-radius: 12px; padding: 2px 10px; font-size: 12px;">
+        <span>CA <span style="color:#22c55e">${data.history.caCount}</span> &gt;</span>
+      </div>
+      <div style="display:flex; align-items:center; background: #1f2022; border-radius: 12px; padding: 2px 10px; font-size: 12px;">
+        <span>Profile ${data.history.profileCount}</span>
+      </div>
+    `;
+    
+    row2.appendChild(walletsDiv);
+    row2.appendChild(historyDiv);
+    container.appendChild(row2);
+
+    // Row 3: Top Moves
+    const row3 = document.createElement("div");
+    row3.style.cssText = "display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; color: #9ca3af;";
+    
+    const topMovesLabel = document.createElement("div");
+    topMovesLabel.innerHTML = `Top Moves <span style="border:1px solid #9ca3af; border-radius:50%; width:14px; height:14px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">i</span>`;
+    row3.appendChild(topMovesLabel);
+    
+    const moves: {label: string, val: string, color: string}[] = data.moves;
+    
+    moves.forEach(m => {
+      const chip = document.createElement("div");
+      chip.style.cssText = "background: #1f2022; border-radius: 4px; padding: 2px 6px; font-size: 12px; font-weight: bold; color: #fff; display: flex; gap: 4px; align-items: center; cursor: pointer;";
+      chip.innerHTML = `${m.label} <span style="color:${m.color}">${m.val}</span> <span style="color:#6b7280">↗</span>`;
+      row3.appendChild(chip);
+    });
+    
+    container.appendChild(row3);
+  } catch (err) {
+    container.innerHTML = `<div style="color: #ef4444; font-size: 13px;">❌ Failed to load intelligence for @${handle}</div>`;
+  }
 }
 
 async function injectAccountHistoryDOM(header: Element, handle: string) {
