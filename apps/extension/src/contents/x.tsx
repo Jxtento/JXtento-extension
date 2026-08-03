@@ -371,7 +371,7 @@ async function injectJXtentoIntelDOM(header: Element, handle: string) {
   header.parentElement?.appendChild(container);
 
   try {
-    const res = await fetch(`${apiUrl}/intelligence/twitter/${handle}`);
+    const res = await fetch(`${apiUrl}/v1/intelligence/twitter/${handle}`);
     if (!res.ok) throw new Error("API Error");
     const data = await res.json();
     
@@ -398,7 +398,7 @@ async function injectJXtentoIntelDOM(header: Element, handle: string) {
       if (newLabel !== null && newLabel.trim() !== "") {
         roleBadge.textContent = "Saving...";
         try {
-          const updateRes = await fetch(`${apiUrl}/intelligence/twitter/${handle}/label`, {
+          const updateRes = await fetch(`${apiUrl}/v1/intelligence/twitter/${handle}/label`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ label: newLabel.trim() })
