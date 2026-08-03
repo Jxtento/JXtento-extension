@@ -15,7 +15,7 @@ export const getStyle = () => {
 }
 
 export const config: PlasmoCSConfig = {
-  matches: ["https://jxtento.trade/*"],
+  matches: ["https://jxtento.trade/*", "https://axiom.trade/*"],
   run_at: "document_idle"
 }
 
