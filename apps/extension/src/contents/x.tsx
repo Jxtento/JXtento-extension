@@ -205,8 +205,87 @@ async function scanSmartFollowers() {
           const colors = ['rgba(139, 92, 246, 0.6)', 'rgba(236, 72, 153, 0.6)', 'rgba(59, 130, 246, 0.6)', 'rgba(16, 185, 129, 0.6)'];
 
           followers.forEach((f: any, i: number) => {
-            const badgeContainer = document.createElement("div");
-            badgeContainer.style.cssText = "display:flex;align-items:center;gap:6px;";
+            const badgeContainer = document.createElement("a");
+            badgeContainer.href = `/${f.handle}`;
+            badgeContainer.style.cssText = "position:relative;display:flex;align-items:center;gap:6px;text-decoration:none;cursor:pointer;transition:transform 0.2s ease;";
+            
+            badgeContainer.onmouseenter = () => {
+              badgeContainer.style.transform = "scale(1.05)";
+              const overlay = document.createElement("div");
+              overlay.className = "jxtento-hover-overlay";
+              overlay.style.cssText = `
+                position: absolute;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                margin-bottom: 8px;
+                background: #151515;
+                border: 1px solid #333;
+                border-radius: 8px;
+                padding: 12px;
+                width: 250px;
+                z-index: 100000;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                color: #fff;
+                cursor: default;
+              `;
+              overlay.innerHTML = `
+                <div style="display:flex; gap:12px; align-items:flex-start;">
+                  <img src="https://unavatar.io/twitter/${f.handle}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;background:#3f3f46;flex-shrink:0;" onerror="this.style.display='none'"/>
+                  <div style="display:flex; flex-direction:column; overflow:hidden;">
+                    <strong class="hover-displayname" style="font-size:15px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; color:#fff;">${f.displayName || f.handle}</strong>
+                    <span class="hover-handle" style="font-size:14px; color:#9ca3af;">@${f.handle}</span>
+                  </div>
+                </div>
+                ${f.bio ? `<div style="font-size:14px; color:#e5e7eb; margin-top:8px; line-height:1.4;">${f.bio}</div>` : ''}
+                <div style="display:flex; gap:12px; margin-top:8px;">
+                  <span style="font-size:14px; color:#9ca3af;"><strong class="hover-following" style="color:#fff;">...</strong> Following</span>
+                  <span style="font-size:14px; color:#9ca3af;"><strong class="hover-followers" style="color:#fff;">${f.followerCount ? f.followerCount.toLocaleString() : '...'}</strong> Followers</span>
+                </div>
+                <div style="font-size:13px; color:#d1d5db; margin-top:8px;">
+                  <span style="color:#a855f7; font-weight:bold;">Category:</span> ${f.category ? f.category.charAt(0).toUpperCase() + f.category.slice(1) : 'Unknown'}
+                </div>
+              `;
+              badgeContainer.appendChild(overlay);
+
+              // Fetch real-time follower/following counts
+              fetch(`https://api.vxtwitter.com/${f.handle}`)
+                .then(r => r.json())
+                .then(data => {
+                  const followingEl = overlay.querySelector('.hover-following') as HTMLElement;
+                  const followersEl = overlay.querySelector('.hover-followers') as HTMLElement;
+                  const handleEl = overlay.querySelector('.hover-handle') as HTMLElement;
+                  const displayNameEl = overlay.querySelector('.hover-displayname') as HTMLElement;
+                  
+                  if (data.screen_name) {
+                    if (handleEl) handleEl.innerText = `@${data.screen_name}`;
+                    const handleSpan = badgeContainer.querySelector('.jxtento-pill-handle') as HTMLElement;
+                    if (handleSpan) handleSpan.textContent = data.screen_name;
+                    badgeContainer.href = `/${data.screen_name}`;
+                  }
+                  
+                  if (data.name && (!f.displayName || f.displayName === f.handle)) {
+                    if (displayNameEl) displayNameEl.innerText = data.name;
+                  }
+                  
+                  if (followingEl && data.following_count !== undefined) {
+                    followingEl.innerText = data.following_count.toLocaleString();
+                  }
+                  if (followersEl && data.followers_count !== undefined) {
+                    followersEl.innerText = data.followers_count.toLocaleString();
+                  }
+                })
+                .catch(err => console.log("Failed to fetch real counts", err));
+            };
+
+            badgeContainer.onmouseleave = () => {
+              badgeContainer.style.transform = "scale(1)";
+              const overlay = badgeContainer.querySelector('.jxtento-hover-overlay');
+              if (overlay) overlay.remove();
+            };
 
             const color = colors[i % colors.length];
 
@@ -231,6 +310,7 @@ async function scanSmartFollowers() {
 
             const handleSpan = document.createElement("span");
             handleSpan.textContent = f.handle;
+            handleSpan.className = "jxtento-pill-handle";
             handleSpan.style.fontWeight = "600";
             textBox.appendChild(handleSpan);
 
@@ -466,12 +546,21 @@ async function injectJXtentoIntelDOM(header: Element, handle: string) {
     topMovesLabel.innerHTML = `Top Moves <span style="border:1px solid #9ca3af; border-radius:50%; width:14px; height:14px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">i</span>`;
     row3.appendChild(topMovesLabel);
     
-    const moves: {label: string, val: string, color: string}[] = data.moves;
+    const moves: {label: string, val: string, color: string, contractAddress?: string}[] = data.moves;
     
     moves.forEach(m => {
       const chip = document.createElement("div");
-      chip.style.cssText = "background: #1f2022; border-radius: 4px; padding: 2px 6px; font-size: 12px; font-weight: bold; color: #fff; display: flex; gap: 4px; align-items: center; cursor: pointer;";
-      chip.innerHTML = `${m.label} <span style="color:${m.color}">${m.val}</span> <span style="color:#6b7280">↗</span>`;
+      chip.style.cssText = `background: #1f2022; border-radius: 4px; padding: 2px 6px; font-size: 12px; font-weight: bold; color: #fff; display: flex; gap: 4px; align-items: center; ${m.contractAddress ? 'cursor: pointer;' : 'cursor: default;'}`;
+      chip.innerHTML = `${m.label} <span style="color:${m.color}">${m.val}</span> ${m.contractAddress ? '<span style="color:#6b7280">↗</span>' : ''}`;
+      
+      if (m.contractAddress) {
+        chip.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.open(`https://gmgn.ai/sol/token/${m.contractAddress}`, '_blank', 'noopener,noreferrer');
+        };
+      }
+      
       row3.appendChild(chip);
     });
     

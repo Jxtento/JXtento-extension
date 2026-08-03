@@ -547,6 +547,23 @@ export function SidePanel() {
             <KolLiveFeed />
           )}
         </div>
+      ) : activeTab === "news" ? (
+        <div className="flex-1 -mx-4 -mt-4 bg-jxtento-bg relative overflow-hidden">
+          {!gateStatus?.unlocked ? (
+            <div className="p-6 text-center mt-8">
+              <svg viewBox="0 0 24 24" fill="none" className="w-12 h-12 mx-auto text-jxtento-muted mb-4">
+                <path d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <h2 className="text-lg font-bold text-jxtento-text">Pro Feature Locked</h2>
+              <div className="mt-2 text-sm text-jxtento-muted flex flex-col gap-2">
+                {gateStatus?.error && <p className="text-jxtento-bad text-xs mb-1">{gateStatus.error}</p>}
+                <p className="font-bold text-jxtento-text bg-jxtento-border/30 inline-block px-3 py-1 rounded">Hold 0.5% of supply to unlock</p>
+              </div>
+            </div>
+          ) : (
+            <NewsLiveFeed />
+          )}
+        </div>
       ) : activeTab === "activity" ? (
         <div className="flex-1 -mx-4 -mt-4 bg-jxtento-bg relative overflow-hidden">
           <ActivityLog />
