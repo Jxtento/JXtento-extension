@@ -149,8 +149,12 @@ export function KolLiveFeed() {
                 {evt.text}
               </p>
               {evt.mediaUrl && (
-                <div className="mb-2 rounded-lg overflow-hidden border border-jxtento-border/20">
-                  <img src={evt.mediaUrl} alt="Tweet Media" className="w-full h-auto object-cover max-h-[300px]" loading="lazy" />
+                <div className={`mb-2 grid gap-2 ${evt.mediaUrl.split(',').length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                  {evt.mediaUrl.split(',').map((url: string, idx: number) => (
+                    <div key={idx} className="rounded-lg overflow-hidden border border-jxtento-border/20">
+                      <img src={url.trim()} alt={`Tweet Media ${idx + 1}`} className="w-full h-auto object-cover max-h-[300px]" loading="lazy" />
+                    </div>
+                  ))}
                 </div>
               )}
               
