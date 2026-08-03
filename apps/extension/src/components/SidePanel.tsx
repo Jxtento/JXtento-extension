@@ -60,12 +60,9 @@ export function SidePanel() {
     const verifyGate = async () => {
       setLoadingGate(true);
       const session = await getWalletStatus();
-      if (session?.connected && session.publicKey) {
-        const result = await checkTokenGate(session.publicKey);
-        if (mounted) setGateStatus(result);
-      } else {
-        if (mounted) setGateStatus({ unlocked: false, balance: 0, threshold: 0, ticker: GATE_TOKEN.ticker, error: "Please connect your wallet to use the extension." });
-      }
+      const pubKey = (session?.connected && session.publicKey) ? session.publicKey : undefined;
+      const result = await checkTokenGate(pubKey);
+      if (mounted) setGateStatus(result);
       if (mounted) setLoadingGate(false);
     };
 
