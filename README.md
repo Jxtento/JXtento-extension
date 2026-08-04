@@ -1,5 +1,7 @@
 # JXtento
 
+**Official JXtento Contract Address:** `6wAnrbNZU6jMtrxjBZGUD2Sre1n1ZCo8b1atNjy1pump`
+
 JXtento is an AI-powered X-to-pump.fun launch radar for Solana trenchers. Its primary workflow is reading live X/Twitter replies, turning notable reply narratives into a pump.fun launch draft, and helping users move from trend discovery to a manual token launch faster.
 
 The extension also adds wallet labels, token risk signals, developer proof checks, and onchain-style insights directly inside JXtento. It is privacy-first and read-only: it does not connect wallets, hold SOL, request private keys, or execute token deployments.
